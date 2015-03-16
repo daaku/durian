@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"unsafe"
 
 	"image"
 	"image/draw"
@@ -24,16 +25,9 @@ var (
 		-1.0, +1.0,
 		+1.0, +1.0,
 	)
+	vertexStride   = int(unsafe.Sizeof(float32(0)) * 2)
 	elementIndexes = []byte{0, 1, 2, 3}
 )
-
-func roundToPower2(x int) int {
-	xa := 1
-	for xa < x {
-		xa *= 2
-	}
-	return xa
-}
 
 func toRGBA(in image.Image) *image.RGBA {
 	switch i := in.(type) {
@@ -121,8 +115,25 @@ func (g *game) stop() {
 }
 
 func (g *game) draw() {
-	gl.ClearColor(1, 1, 1, 1)
-	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.UseProgram(g.program)
+	gl.Uniform1f(g.uniforms.fadeFactor, g.fadeFactor)
+
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.BindTexture(gl.TEXTURE_2D, g.textures[0])
+	gl.Uniform1i(g.uniforms.textures[0], 0)
+
+	gl.ActiveTexture(gl.TEXTURE1)
+	gl.BindTexture(gl.TEXTURE_2D, g.textures[1])
+	gl.Uniform1i(g.uniforms.textures[1], 1)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, g.vertextBuffer)
+	gl.VertexAttribPointer(g.attribs.position, 2, gl.FLOAT, false, vertexStride, 0)
+	gl.EnableVertexAttribArray(g.attribs.position)
+	defer gl.DisableVertexAttribArray(g.attribs.position)
+
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, g.elementBuffer)
+	gl.DrawElements(gl.TRIANGLE_STRIP, gl.UNSIGNED_SHORT, 0, len(elementIndexes))
+
 	debug.DrawFPS()
 }
 
