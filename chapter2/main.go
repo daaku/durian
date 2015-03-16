@@ -3,11 +3,10 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"unsafe"
-
 	"image"
 	"image/draw"
 	_ "image/png"
+	"unsafe"
 
 	"github.com/GeertJohan/go.rice"
 	"golang.org/x/mobile/app"
@@ -154,7 +153,7 @@ func main() {
 const vertextShaderSource = `
 #version 330
 
-in vec2 position;
+layout(location = 0) in vec2 position;
 out vec2 texcoord;
 
 void main() {
