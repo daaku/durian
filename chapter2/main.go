@@ -114,6 +114,9 @@ func (g *game) stop() {
 }
 
 func (g *game) draw() {
+	gl.ClearColor(0.5, 0.5, 0.5, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+
 	gl.UseProgram(g.program)
 	gl.Uniform1f(g.uniforms.fadeFactor, g.fadeFactor)
 
