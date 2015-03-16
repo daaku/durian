@@ -14,6 +14,7 @@ import (
 	"golang.org/x/mobile/event"
 	"golang.org/x/mobile/f32"
 	"golang.org/x/mobile/gl"
+	"golang.org/x/mobile/gl/glutil"
 )
 
 var (
@@ -49,6 +50,15 @@ type game struct {
 	box                          *rice.Box
 	vertextBuffer, elementBuffer gl.Buffer
 	textures                     [2]gl.Texture
+	fadeFactor                   float32
+	program                      gl.Program
+	uniforms                     struct {
+		fadeFactor gl.Uniform
+		textures   [2]gl.Uniform
+	}
+	attribs struct {
+		position gl.Attrib
+	}
 }
 
 func (g *game) loadImage(name string) (gl.Texture, error) {
@@ -94,6 +104,16 @@ func (g *game) start() {
 	if err != nil {
 		panic(err)
 	}
+
+	g.program, err = glutil.CreateProgram(vertextShaderSource, fragmentShaderSource)
+	if err != nil {
+		panic(err)
+	}
+
+	g.uniforms.fadeFactor = gl.GetUniformLocation(g.program, "fade_factor")
+	g.uniforms.textures[0] = gl.GetUniformLocation(g.program, "textures[0]")
+	g.uniforms.textures[1] = gl.GetUniformLocation(g.program, "textures[1]")
+	g.attribs.position = gl.GetAttribLocation(g.program, "position")
 }
 
 func (g *game) stop() {
@@ -119,3 +139,33 @@ func main() {
 		Touch: g.touch,
 	})
 }
+
+const vertextShaderSource = `
+#version 330
+
+in vec2 position;
+out vec2 texcoord;
+
+void main() {
+	gl_Position = vec4(position, 0.0, 1.0);
+	texcoord = position * vec2(0.5) + vec2(0.5);
+}
+`
+
+const fragmentShaderSource = `
+#version 330
+
+uniform float fade_factor;
+uniform sampler2D textures[2];
+
+in vec2 texcoord;
+out vec4 fragColor;
+
+void main() {
+	fragColor = mix(
+		texture(textures[0], texcoord),
+		texture(textures[1], texcoord),
+		fade_factor
+	);
+}
+`
