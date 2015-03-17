@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/draw"
 	_ "image/png"
-	"unsafe"
 
 	"github.com/GeertJohan/go.rice"
 	"golang.org/x/mobile/app"
@@ -24,7 +23,6 @@ var (
 		-1.0, +1.0,
 		+1.0, +1.0,
 	)
-	vertexStride   = int(unsafe.Sizeof(float32(0)) * 2)
 	elementIndexes = []byte{0, 1, 2, 3}
 )
 
@@ -114,9 +112,6 @@ func (g *game) stop() {
 }
 
 func (g *game) draw() {
-	gl.ClearColor(0.5, 0.5, 0.5, 1)
-	gl.Clear(gl.COLOR_BUFFER_BIT)
-
 	gl.UseProgram(g.program)
 	gl.Uniform1f(g.uniforms.fadeFactor, g.fadeFactor)
 
@@ -129,12 +124,13 @@ func (g *game) draw() {
 	gl.Uniform1i(g.uniforms.textures[1], 1)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, g.vertextBuffer)
-	gl.VertexAttribPointer(g.attribs.position, 2, gl.FLOAT, false, vertexStride, 0)
 	gl.EnableVertexAttribArray(g.attribs.position)
-	defer gl.DisableVertexAttribArray(g.attribs.position)
+	gl.VertexAttribPointer(g.attribs.position, 2, gl.FLOAT, false, 0, 0)
 
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, g.elementBuffer)
-	gl.DrawElements(gl.TRIANGLE_STRIP, gl.UNSIGNED_SHORT, 0, len(elementIndexes))
+	gl.DrawElements(gl.TRIANGLE_STRIP, gl.UNSIGNED_BYTE, 0, len(elementIndexes))
+
+	gl.DisableVertexAttribArray(g.attribs.position)
 
 	debug.DrawFPS()
 }
