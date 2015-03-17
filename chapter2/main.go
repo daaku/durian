@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/draw"
 	_ "image/png"
-	"math"
 	"time"
 
 	"github.com/GeertJohan/go.rice"
@@ -46,8 +45,8 @@ type game struct {
 	textures                     [2]gl.Texture
 	program                      gl.Program
 	uniforms                     struct {
-		fadeFactor gl.Uniform
-		textures   [2]gl.Uniform
+		timer    gl.Uniform
+		textures [2]gl.Uniform
 	}
 	attribs struct {
 		position gl.Attrib
@@ -103,7 +102,7 @@ func (g *game) start() {
 		panic(err)
 	}
 
-	g.uniforms.fadeFactor = gl.GetUniformLocation(g.program, "fadeFactor")
+	g.uniforms.timer = gl.GetUniformLocation(g.program, "timer")
 	g.uniforms.textures[0] = gl.GetUniformLocation(g.program, "textures[0]")
 	g.uniforms.textures[1] = gl.GetUniformLocation(g.program, "textures[1]")
 	g.attribs.position = gl.GetAttribLocation(g.program, "position")
@@ -117,8 +116,7 @@ func (g *game) stop() {
 func (g *game) draw() {
 	gl.UseProgram(g.program)
 
-	fadeFactor := float32(math.Sin(time.Since(g.startTime).Seconds())*0.5 + 0.5)
-	gl.Uniform1f(g.uniforms.fadeFactor, fadeFactor)
+	gl.Uniform1f(g.uniforms.timer, float32(time.Since(g.startTime).Seconds()))
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, g.textures[0])
@@ -169,13 +167,14 @@ void main() {
 const fragmentShaderSource = `
 #version 330
 
-uniform float fadeFactor;
+uniform float timer;
 uniform sampler2D textures[2];
 
 in vec2 texcoord;
 out vec4 fragColor;
 
 void main() {
+	float fadeFactor = sin(timer) * 0.5 + 0.5;
 	fragColor = mix(
 		texture(textures[0], texcoord),
 		texture(textures[1], texcoord),
