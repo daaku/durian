@@ -6,6 +6,8 @@ import (
 	"image"
 	"image/draw"
 	_ "image/png"
+	"math"
+	"time"
 
 	"github.com/GeertJohan/go.rice"
 	"golang.org/x/mobile/app"
@@ -39,9 +41,9 @@ func toRGBA(in image.Image) *image.RGBA {
 
 type game struct {
 	box                          *rice.Box
+	startTime                    time.Time
 	vertextBuffer, elementBuffer gl.Buffer
 	textures                     [2]gl.Texture
-	fadeFactor                   float32
 	program                      gl.Program
 	uniforms                     struct {
 		fadeFactor gl.Uniform
@@ -105,6 +107,7 @@ func (g *game) start() {
 	g.uniforms.textures[0] = gl.GetUniformLocation(g.program, "textures[0]")
 	g.uniforms.textures[1] = gl.GetUniformLocation(g.program, "textures[1]")
 	g.attribs.position = gl.GetAttribLocation(g.program, "position")
+	g.startTime = time.Now()
 }
 
 func (g *game) stop() {
@@ -113,7 +116,9 @@ func (g *game) stop() {
 
 func (g *game) draw() {
 	gl.UseProgram(g.program)
-	gl.Uniform1f(g.uniforms.fadeFactor, g.fadeFactor)
+
+	fadeFactor := float32(math.Sin(time.Since(g.startTime).Seconds())*0.5 + 0.5)
+	gl.Uniform1f(g.uniforms.fadeFactor, fadeFactor)
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, g.textures[0])
