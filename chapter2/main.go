@@ -103,7 +103,7 @@ func (g *game) start() {
 		panic(err)
 	}
 
-	g.uniforms.fadeFactor = gl.GetUniformLocation(g.program, "fade_factor")
+	g.uniforms.fadeFactor = gl.GetUniformLocation(g.program, "fadeFactor")
 	g.uniforms.textures[0] = gl.GetUniformLocation(g.program, "textures[0]")
 	g.uniforms.textures[1] = gl.GetUniformLocation(g.program, "textures[1]")
 	g.attribs.position = gl.GetAttribLocation(g.program, "position")
@@ -169,7 +169,7 @@ void main() {
 const fragmentShaderSource = `
 #version 330
 
-uniform float fade_factor;
+uniform float fadeFactor;
 uniform sampler2D textures[2];
 
 in vec2 texcoord;
@@ -179,7 +179,7 @@ void main() {
 	fragColor = mix(
 		texture(textures[0], texcoord),
 		texture(textures[1], texcoord),
-		fade_factor
+		fadeFactor
 	);
 }
 `
